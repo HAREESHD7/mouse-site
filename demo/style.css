@@ -1,0 +1,1652 @@
+/* The Mouse screen.
+ *
+ * Panes of frosted glass floating over a soft, coloured background: a narrow
+ * strip of actions, your days on the left, the open day in the middle, and a
+ * panel on the right for one photo or a conversation.
+ *
+ * Everything a person can change in Settings is a value on the <html> tag:
+ *   data-theme   light or dark
+ *   data-accent  the colour of things you can press
+ *   data-wall    the background behind the glass
+ *   data-text    small, normal or large lettering
+ *   --clear      how see-through the glass is (0 solid, 1 very clear)
+ *
+ * One idea carries through from the first version: a value Mouse read by
+ * itself looks pencilled in (grey). A value you have checked looks inked
+ * (bright, with a green mark).
+ */
+
+:root {
+  --ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Noto Sans", "Liberation Sans", sans-serif;
+  --stamped: "Bahnschrift", "DIN Alternate", "Roboto Condensed", "Arial Narrow", "Liberation Sans Narrow", sans-serif;
+  --round-pane: 20px;
+  --round: 14px;
+  --round-small: 10px;
+  --clear: 0.62;
+  --blur: blur(30px) saturate(170%);
+  font-size: 15px;
+}
+
+html[data-text="small"] { font-size: 13.5px; }
+html[data-text="large"] { font-size: 17px; }
+
+/* ---------- Dark and light ---------- */
+
+html[data-theme="dark"] {
+  --pane-rgb: 22 24 31;                 /* the glass itself */
+  --text: #eceef2;                      /* "ink": checked values, headings */
+  --muted: #aab0bc;                     /* "pencil": not yet checked, quiet text */
+  --faint: #838a98;
+  --raised: rgb(255 255 255 / 0.07);    /* tiles and boxes lying on the glass */
+  --hover: rgb(255 255 255 / 0.12);
+  --line: rgb(255 255 255 / 0.11);
+  --edge: rgb(255 255 255 / 0.14);      /* the bright rim along the top of a pane */
+  --well: rgb(0 0 0 / 0.26);            /* boxes you type in, sunk into the glass */
+  --knob: #f4f5f7;
+  --green: #5fd198;
+  --red: #f08a85;
+  --photo-back: rgb(0 0 0 / 0.34);
+  --shadow: rgb(0 0 0 / 0.5);
+  --wall-0: #0b0d12;
+  --theme-sat: 62%;
+  --theme-light: 36%;
+  --accent: var(--accent-on-dark);
+  --accent-strong: var(--accent-on-dark-strong);
+  --on-accent: #15161a;
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  --pane-rgb: 255 255 255;
+  --text: #1a1f27;
+  --muted: #505966;
+  --faint: #76808d;
+  --raised: rgb(255 255 255 / 0.62);
+  --hover: rgb(20 30 50 / 0.07);
+  --line: rgb(20 30 50 / 0.13);
+  --edge: rgb(255 255 255 / 0.9);
+  --well: rgb(255 255 255 / 0.74);
+  --knob: #ffffff;
+  --green: #18794a;
+  --red: #b3282d;
+  --photo-back: rgb(20 30 50 / 0.1);
+  --shadow: rgb(40 50 80 / 0.22);
+  --wall-0: #e8ecf3;
+  --theme-sat: 80%;
+  --theme-light: 84%;
+  --accent: var(--accent-on-light);
+  --accent-strong: var(--accent-on-light-strong);
+  --on-accent: #ffffff;
+  color-scheme: light;
+}
+
+/* ---------- The colour of things you can press ---------- */
+
+html[data-accent="amber"]    { --accent-on-dark: #e5b85c; --accent-on-dark-strong: #f1c979; --accent-on-light: #855f08; --accent-on-light-strong: #6b4c05; }
+html[data-accent="blue"]     { --accent-on-dark: #6fa9ff; --accent-on-dark-strong: #93bfff; --accent-on-light: #1d5bcb; --accent-on-light-strong: #1647a1; }
+html[data-accent="teal"]     { --accent-on-dark: #4fd1c5; --accent-on-dark-strong: #79dfd6; --accent-on-light: #0c746a; --accent-on-light-strong: #095a52; }
+html[data-accent="green"]    { --accent-on-dark: #62cf90; --accent-on-dark-strong: #86dda9; --accent-on-light: #187645; --accent-on-light-strong: #115a34; }
+html[data-accent="rose"]     { --accent-on-dark: #ff91a8; --accent-on-dark-strong: #ffadbe; --accent-on-light: #bd2852; --accent-on-light-strong: #981e41; }
+html[data-accent="violet"]   { --accent-on-dark: #b6a0ff; --accent-on-dark-strong: #cab9ff; --accent-on-light: #6741d1; --accent-on-light-strong: #5232ab; }
+html[data-accent="graphite"] { --accent-on-dark: #d5d9e0; --accent-on-dark-strong: #ffffff; --accent-on-light: #353b45; --accent-on-light-strong: #1a1f27; }
+
+/* ---------- The background behind the glass ----------
+   Three soft pools of colour. Each background is just three hues; the theme
+   decides how deep or pale they are. The small previews in Settings (.wall)
+   use the same recipe. */
+
+html, .wall { --wall-sat: var(--theme-sat); --wall-alpha: 1; }
+
+html[data-wall="aurora"], .wall[data-value="aurora"] { --h1: 198; --h2: 262; --h3: 168; }
+html[data-wall="dusk"],   .wall[data-value="dusk"]   { --h1: 338; --h2: 250; --h3: 28; }
+html[data-wall="meadow"], .wall[data-value="meadow"] { --h1: 148; --h2: 190; --h3: 52; }
+html[data-wall="ember"],  .wall[data-value="ember"]  { --h1: 20; --h2: 345; --h3: 282; }
+html[data-wall="mist"],   .wall[data-value="mist"]   { --h1: 220; --h2: 220; --h3: 220; --wall-sat: 9%; }
+html[data-wall="plain"],  .wall[data-value="plain"]  { --h1: 220; --h2: 220; --h3: 220; --wall-alpha: 0; }
+
+body, .wall {
+  background:
+    radial-gradient(ellipse 75% 70% at 5% 0%, hsl(var(--h1) var(--wall-sat) var(--theme-light) / var(--wall-alpha)), transparent 75%),
+    radial-gradient(ellipse 70% 75% at 100% 10%, hsl(var(--h2) var(--wall-sat) var(--theme-light) / var(--wall-alpha)), transparent 75%),
+    radial-gradient(ellipse 95% 70% at 50% 110%, hsl(var(--h3) var(--wall-sat) var(--theme-light) / var(--wall-alpha)), transparent 75%),
+    var(--wall-0);
+}
+
+/* ---------- Basics ---------- */
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  background-attachment: fixed;
+  color: var(--text);
+  font: 1rem/1.5 var(--ui);
+}
+
+h1, h2, h3, h4, p, dl, dd, ol, ul { margin: 0; padding: 0; }
+
+ol, ul { list-style: none; }
+
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A thin, quiet scrollbar that suits both themes. */
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+/* ---------- Glass ----------
+   Every pane is the same sheet: a tinted, see-through fill, a blur of what
+   is behind it, a bright rim on top and a soft shadow underneath. */
+
+.ribbon, .sidebar, .page, .side, .dialog, .menu-panel, .demo-bar, .toast {
+  background: rgb(var(--pane-rgb) / calc(1 - var(--clear) * 0.62));
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 var(--edge), 0 14px 34px -14px var(--shadow);
+}
+
+/* The page holds the most reading, so it is a little less see-through. */
+.page { background: rgb(var(--pane-rgb) / calc(1 - var(--clear) * 0.46)); }
+
+/* Things that float over the page need to stay readable whatever is below. */
+.dialog, .menu-panel, .toast { background: rgb(var(--pane-rgb) / calc(1 - var(--clear) * 0.3)); }
+
+/* Some people ask their computer for less see-through. Respect that. */
+@media (prefers-reduced-transparency: reduce) {
+  html { --clear: 0 !important; }
+}
+
+/* ---------- Layout: strip | days | open day | side panel ---------- */
+
+.shell {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 52px 258px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
+
+.shell.has-side { grid-template-columns: 52px 258px minmax(0, 1fr) minmax(360px, 430px); }
+
+.shell.no-sidebar { grid-template-columns: 52px minmax(0, 1fr); }
+
+.shell.no-sidebar.has-side { grid-template-columns: 52px minmax(0, 1fr) minmax(360px, 430px); }
+
+.shell.no-sidebar .sidebar { display: none; }
+
+.ribbon, .sidebar, .page, .side { border-radius: var(--round-pane); min-height: 0; }
+
+.demo-bar {
+  margin: 10px 10px 0;
+  padding: 7px 16px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.demo-bar a { color: var(--accent); font-weight: 600; margin-left: 6px; }
+
+/* ---------- The strip of actions ---------- */
+
+.ribbon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.ribbon-gap { flex: 1; }
+
+.ribbon-button, .icon-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ribbon-button:hover, .icon-button:hover { background: var(--hover); color: var(--text); }
+
+.ribbon-button[aria-pressed="true"] { background: var(--hover); color: var(--accent); }
+
+html[data-theme="dark"] .icon-moon { display: none; }
+html[data-theme="light"] .icon-sun { display: none; }
+
+/* ---------- Your days ---------- */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 10px 12px;
+  overflow-y: auto;
+}
+
+.wordmark {
+  padding: 0 8px;
+  font: 600 1.5rem/1.2 var(--stamped);
+  letter-spacing: 0.02em;
+}
+
+.search, .input, .select, .ask-box {
+  border: 1px solid var(--line);
+  border-radius: var(--round-small);
+  background: var(--well);
+  color: var(--text);
+  font: inherit;
+}
+
+.search { width: 100%; padding: 7px 12px; border-radius: 999px; }
+
+.search::placeholder, .input::placeholder, .ask-box::placeholder { color: var(--faint); }
+
+.visit-list { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+.visit-link {
+  display: block;
+  width: 100%;
+  padding: 8px 10px 8px 14px;
+  border: 0;
+  border-radius: var(--round-small);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.visit-link:hover { background: var(--hover); }
+
+.visit-link[aria-current="true"] { background: var(--hover); box-shadow: inset 3px 0 0 var(--accent); }
+
+.visit-link-name { display: block; font-weight: 600; overflow-wrap: anywhere; }
+
+.visit-link-facts { display: block; color: var(--muted); font-size: 0.84rem; }
+
+.visit-none { padding: 6px 10px; color: var(--muted); font-size: 0.87rem; }
+
+.kept-here { padding: 0 8px; color: var(--faint); font-size: 0.8rem; }
+
+/* ---------- Buttons and inputs ---------- */
+
+.button {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text);
+  font: 600 0.9rem/1.3 var(--ui);
+  cursor: pointer;
+}
+
+.button:hover { background: var(--hover); }
+
+.button:disabled { opacity: 0.45; cursor: default; }
+
+.button-main {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.button-main:hover { background: var(--accent-strong); }
+
+.button-small { padding: 3px 11px; font-size: 0.84rem; }
+
+.button-quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--accent);
+  padding: 2px 6px;
+}
+
+.input { width: 100%; padding: 7px 11px; }
+
+.select { padding: 6px 9px; max-width: 100%; }
+
+.select-wide { width: 100%; }
+
+.field { display: block; margin: 14px 0 5px; font-weight: 600; font-size: 0.87rem; }
+
+.quiet { color: var(--muted); font-size: 0.87rem; }
+
+.hint { margin-top: 5px; color: var(--muted); font-size: 0.84rem; }
+
+/* The small switch between two or three views of the same thing. */
+.views {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--well);
+  border: 1px solid var(--line);
+}
+
+.view {
+  padding: 4px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: 600 0.87rem/1.4 var(--ui);
+  cursor: pointer;
+}
+
+.view:hover { color: var(--text); }
+
+.view[aria-selected="true"], .view[aria-checked="true"] {
+  background: var(--raised);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 var(--edge), 0 1px 3px var(--shadow);
+}
+
+/* A small menu that drops down from a button. */
+.menu { position: relative; }
+
+.menu summary { list-style: none; }
+
+.menu summary::-webkit-details-marker { display: none; }
+
+.menu[open] summary { background: var(--hover); }
+
+/* A menu whose button is the main one keeps its colour while it is open. */
+.menu[open] summary.button-main { background: var(--accent-strong); }
+
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 290px;
+  padding: 14px;
+  border-radius: var(--round);
+}
+
+.menu-title { font-weight: 600; font-size: 0.87rem; }
+
+.menu-panel .hint { margin: 0 0 6px; }
+
+/* One choice in a menu: what it is, and a line about it. */
+.menu-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--round-small);
+  background: var(--raised);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-choice:hover { background: var(--hover); }
+
+.menu-choice span { color: var(--muted); font-size: 0.84rem; }
+
+.menu-choice:disabled { opacity: 0.55; cursor: progress; }
+
+/* ---------- The open day ---------- */
+
+.page { overflow-y: auto; }
+
+.page-inner { max-width: 1280px; margin: 0 auto; padding: 28px 32px 60px; }
+
+.visit-name { font: 600 2rem/1.15 var(--ui); letter-spacing: -0.015em; }
+
+/* Facts about the day, laid out like the properties at the top of a note. */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.facts div { display: flex; gap: 7px; }
+
+.facts dt { color: var(--muted); }
+
+.facts dd { color: var(--text); }
+
+.facts .needs-you dd { color: var(--accent); font-weight: 600; }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin-top: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.notice {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--round-small);
+  background: var(--raised);
+  box-shadow: inset 3px 0 0 var(--green);
+}
+
+.notice.is-problem { box-shadow: inset 3px 0 0 var(--red); color: var(--red); }
+
+.job {
+  margin-top: 14px;
+  padding: 13px 16px;
+  border-radius: var(--round);
+  background: var(--raised);
+}
+
+.job-what { font-weight: 600; }
+
+.job-track { height: 6px; margin: 9px 0 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+
+.job-bar { height: 100%; width: 0; border-radius: 3px; background: var(--accent); transition: width 0.3s ease; }
+
+.job-now { color: var(--muted); font-size: 0.84rem; }
+
+/* Filters: one row for what a photo is, one row for which space it is in */
+
+.filters { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 14px; }
+
+.filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+.filter-row .quiet { margin-right: 2px; }
+
+.filter-row .pick-toggle { margin-left: auto; }
+
+.filter {
+  padding: 3px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.87rem;
+  cursor: pointer;
+}
+
+.filter:hover { color: var(--text); background: var(--hover); }
+
+.filter[aria-pressed="true"] { border-color: transparent; background: var(--text); color: rgb(var(--pane-rgb)); }
+
+/* ---------- Photos view: a grid of tiles ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.filters + .grid { margin-top: 0; }
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: var(--raised);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.tile:hover { background: var(--hover); }
+
+.tile[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+.tile-picture {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--photo-back);
+}
+
+.tile-picture.is-missing {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.87rem;
+}
+
+/* What the photo is, on a small tag over its corner. */
+.tag {
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgb(18 19 22 / 0.62);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #f1f2f4;
+  font-size: 0.8rem;
+}
+
+.tag.is-plate { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+
+.tile-words { padding: 10px 12px 12px; }
+
+.tile-title {
+  font: 600 1rem/1.3 var(--ui);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tile-sub {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tile-checked { margin-top: 7px; font-size: 0.8rem; color: var(--muted); }
+
+.tile-checked.is-done { color: var(--green); font-weight: 600; }
+
+.tile-checked.is-waiting { color: var(--accent); }
+
+.nothing { color: var(--muted); padding: 20px 0; max-width: 62ch; }
+
+/* Picking several photos, to put them into a space together. */
+
+.tile.is-picking { cursor: copy; }
+
+.tile.is-picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+
+.tile.is-picked::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  /* a tick, drawn with two borders */
+  background:
+    linear-gradient(var(--accent), var(--accent));
+  box-shadow: 0 1px 4px var(--shadow);
+}
+
+.tile.is-picked::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  right: 16.5px;
+  width: 6px;
+  height: 11px;
+  border: solid var(--on-accent);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(40deg);
+}
+
+.pick-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: rgb(var(--pane-rgb) / calc(1 - var(--clear) * 0.2));
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  box-shadow: inset 0 1px 0 var(--edge), 0 14px 34px -14px var(--shadow);
+}
+
+.pick-count { font-weight: 600; margin-right: auto; }
+
+/* ---------- Spaces view: the rooms and areas of a visit ---------- */
+
+.spaces-top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+
+.spaces {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.spaces > .nothing { grid-column: 1 / -1; }
+
+.space-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: var(--raised);
+  overflow: hidden;
+}
+
+.space-card.is-loose { border-style: dashed; background: none; }
+
+/* Up to four of its photos, side by side. */
+.space-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  height: 78px;
+  background: var(--photo-back);
+}
+
+.space-thumb { width: 100%; height: 78px; object-fit: cover; display: block; }
+
+.space-thumb.is-missing { display: grid; place-items: center; color: var(--muted); font-size: 0.74rem; }
+
+.space-words { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; flex: 1; }
+
+.space-name { font: 600 1.13rem/1.25 var(--ui); overflow-wrap: anywhere; }
+
+.space-words .facts { margin-top: 0; gap: 2px 16px; font-size: 0.87rem; }
+
+.space-count { color: var(--muted); font-size: 0.87rem; }
+
+.space-notes {
+  color: var(--muted);
+  font-size: 0.87rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.space-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 6px; }
+
+/* ---------- One space's own page: what is noted in it ---------- */
+
+.space-page { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 14px; }
+
+.space-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+
+.space-title { font: 600 1.4rem/1.2 var(--ui); margin-right: auto; overflow-wrap: anywhere; }
+
+.space-page > .facts { margin-top: 0; }
+
+.space-page-notes { color: var(--muted); white-space: pre-wrap; max-width: 78ch; }
+
+.inventory { padding-top: 14px; border-top: 1px solid var(--line); }
+
+.inventory-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+
+.inventory-head h4 { font: 600 1.07rem/1.3 var(--ui); }
+
+.inventory-head .quiet { margin-right: auto; }
+
+.entries {
+  display: grid;
+  /* Cards about 330px wide, or the full width where there is less room
+     than that (a phone). */
+  grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* An entry: a piece of equipment, a light fitting, a window, a meter. */
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: var(--raised);
+}
+
+.entry-title { margin: 0; font: 600 1rem/1.3 var(--ui); overflow-wrap: anywhere; }
+
+.entry-photos, .photo-strip { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.photo-strip { margin-top: 12px; }
+
+.entry-thumb, .strip-thumb {
+  width: 76px;
+  height: 57px;
+  object-fit: cover;
+  border-radius: 7px;
+  background: var(--photo-back);
+  cursor: pointer;
+}
+
+.entry-thumb.is-missing, .strip-thumb.is-missing {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+/* The same ruled boxes as a nameplate's data plate, as many across as fit. */
+.entry-cells { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+
+.entry-cells .cell-value { font-size: 1.07rem; }
+
+/* An empty box has nothing to check yet. */
+.cell.is-empty .check { display: none; }
+
+/* What was worked out for an entry, such as its total watts. */
+.entry-sum { color: var(--muted); font-size: 0.9rem; }
+
+.entry-sum strong { color: var(--text); }
+
+.entry-notes { min-height: 3.2em; font-size: 0.9rem; }
+
+.entry-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
+
+.entry-foot .select { max-width: 60%; font-size: 0.87rem; padding: 3px 7px; }
+
+/* ---------- What the visit itself is described by ---------- */
+
+.about-visit {
+  margin-top: 18px;
+  padding: 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: var(--raised);
+  max-width: 78ch;
+}
+
+.about-title { font-weight: 600; cursor: pointer; }
+
+.about-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+  gap: 10px 14px;
+  margin-top: 12px;
+}
+
+.about-field .field { margin: 0 0 4px; }
+
+/* ---------- Day view: the day told in order ---------- */
+
+.summary {
+  margin: 18px 0 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: var(--raised);
+  max-width: 78ch;
+}
+
+.summary-title { font-weight: 600; margin-bottom: 4px; }
+
+.summary-words { white-space: pre-wrap; }
+
+.summary-empty { color: var(--muted); }
+
+.summary-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+
+.day { margin-top: 22px; max-width: 78ch; }
+
+.moment {
+  position: relative;
+  display: grid;
+  grid-template-columns: 62px 96px minmax(0, 1fr);
+  gap: 14px;
+  padding: 0 0 22px 0;
+}
+
+/* The line that runs down the page, with a dot at each moment. */
+.moment::before {
+  content: "";
+  position: absolute;
+  left: 68px;
+  top: 8px;
+  bottom: -8px;
+  width: 1px;
+  background: var(--line);
+}
+
+.moment:last-child::before { display: none; }
+
+.moment::after {
+  content: "";
+  position: absolute;
+  left: 64.5px;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+
+.moment.is-plate::after { background: var(--accent); }
+
+.moment-time { color: var(--muted); font-size: 0.84rem; padding-top: 1px; text-align: right; padding-right: 14px; }
+
+.moment-picture {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--round-small);
+  background: var(--photo-back);
+  cursor: pointer;
+}
+
+.moment-picture.is-missing { display: grid; place-items: center; color: var(--muted); font-size: 0.8rem; cursor: default; }
+
+.moment-words { min-width: 0; }
+
+.moment-kind { color: var(--muted); font-size: 0.84rem; }
+
+.moment-title { font-weight: 600; overflow-wrap: anywhere; }
+
+.moment-text { margin-top: 2px; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.moment-open { margin-top: 4px; }
+
+.moment-actions { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; }
+
+.moment-actions .button-quiet { padding-left: 0; }
+
+/* What was said between two photos. It takes the picture's column for a
+   small speech mark, so the words line up with the photos' words. */
+.moment.is-spoken::after { background: var(--accent); width: 6px; height: 6px; left: 65.5px; top: 8px; }
+
+.moment-spoken-mark { display: flex; justify-content: flex-end; padding-top: 1px; color: var(--muted); }
+
+.moment-spoken-mark svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+
+/* Lines of speech, wherever they are shown: the time, then the words. */
+.spoken { list-style: none; margin: 0; padding: 0; white-space: normal; }
+
+.spoken-line { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: baseline; padding: 2px 0; }
+
+.spoken-time {
+  min-width: 4.6em;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: 500 0.84rem/1.4 var(--ui);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+}
+
+.spoken-time:hover { text-decoration: underline; }
+
+.spoken-time.is-none { cursor: default; }
+
+.spoken-words { overflow-wrap: anywhere; }
+
+.spoken-cue { grid-column: 2; justify-self: start; padding-left: 0; text-align: left; }
+
+/* Where a space begins in the telling of a visit. */
+.space-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 4px 0 16px;
+  padding: 8px 14px;
+  border-radius: var(--round-small);
+  background: var(--raised);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.space-start.is-loose { box-shadow: inset 3px 0 0 var(--faint); }
+
+.space-start-name { font-weight: 600; }
+
+.space-start-facts { color: var(--muted); font-size: 0.87rem; }
+
+.space-start .button-quiet { margin-left: auto; }
+
+/* ---------- The side panel ---------- */
+
+.side {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.side-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.side-photo { overflow-y: auto; flex: 1; min-height: 0; }
+
+.side-hint { padding: 22px 16px; color: var(--muted); }
+
+.detail-photo {
+  display: block;
+  width: 100%;
+  height: 40vh;              /* fixed, so what is below does not jump */
+  object-fit: contain;
+  background: var(--photo-back);
+  cursor: zoom-in;
+}
+
+.detail-steps { display: flex; gap: 6px; padding: 12px 16px 0; }
+
+.detail-body { padding: 12px 16px 28px; }
+
+.detail-name { color: var(--muted); font-size: 0.84rem; overflow-wrap: anywhere; }
+
+.detail-kind { font: 600 1.27rem/1.25 var(--ui); margin-top: 2px; overflow-wrap: anywhere; }
+
+.detail-how { margin-top: 6px; color: var(--muted); font-size: 0.87rem; }
+
+/* A sound or video recording, played where a photo would be shown. */
+.player-holder { display: grid; place-items: center; padding: 16px; background: var(--photo-back); }
+
+.player-holder.is-video { padding: 0; }
+
+.player-holder.is-missing { min-height: 84px; color: var(--muted); font-size: 0.87rem; }
+
+.player { display: block; width: 100%; }
+
+video.player { max-height: 40vh; }
+
+.spoken-panel { max-height: 46vh; overflow-y: auto; }
+
+/* Having Mouse listen to a recording, or getting the model that does it. */
+.listen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
+
+.listen .hint { margin-top: 0; flex-basis: 100%; }
+
+.spoken-bring { margin-top: 14px; }
+
+.spoken-bring summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+
+.spoken-paste { margin-top: 8px; min-height: 8em; font-size: 0.9rem; resize: vertical; }
+
+.spoken-bring-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+.entry-spoken { margin-top: 8px; padding: 9px 11px; border-radius: var(--round-small); background: var(--well); font-size: 0.9rem; }
+
+.entry-spoken .button-quiet { padding-left: 0; margin-top: 2px; }
+
+/* Which space this photo belongs to. */
+.photo-space { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+
+.photo-space label { color: var(--muted); font-size: 0.87rem; }
+
+.photo-space .select { flex: 1; min-width: 0; }
+
+/* What a sign, a screen or any other photo says, set out to be read. */
+.says {
+  margin-top: 14px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: var(--raised);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+
+.says-title { color: var(--muted); font-size: 0.84rem; margin-bottom: 4px; }
+
+/* The Nameplates tool's data plate: ruled cells, a small label over a large
+   value, and a rivet in each corner. */
+
+.plate {
+  position: relative;
+  margin-top: 14px;
+  padding: 16px 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 8px 8px, var(--faint) 0 2px, transparent 2.5px),
+    radial-gradient(circle at calc(100% - 8px) 8px, var(--faint) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 8px calc(100% - 8px), var(--faint) 0 2px, transparent 2.5px),
+    radial-gradient(circle at calc(100% - 8px) calc(100% - 8px), var(--faint) 0 2px, transparent 2.5px),
+    var(--raised);
+}
+
+.plate-cells {
+  display: grid;
+  grid-auto-flow: dense;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.cell {
+  position: relative;
+  padding: 5px 34px 6px 9px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cell.is-wide { grid-column: 1 / -1; }
+
+.cell-label { display: block; color: var(--muted); font-size: 0.77rem; }
+
+/* The value is a text box that looks like lettering until you click it. */
+.cell-value {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px dashed transparent;
+  background: none;
+  font: 400 1.2rem/1.3 var(--stamped);
+  color: var(--muted);             /* pencil: Mouse read it, nobody checked */
+}
+
+.cell-value:hover { border-bottom-color: var(--faint); }
+
+.cell-value:focus { outline: none; border-bottom: 1px solid var(--accent); color: var(--text); }
+
+.cell.is-checked .cell-value { color: var(--text); font-weight: 600; }   /* ink */
+
+/* The round check mark in the corner of each cell. */
+.check {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  padding: 0;
+  border: 1.5px solid var(--faint);
+  border-radius: 50%;
+  background: none;
+  color: transparent;
+  cursor: pointer;
+}
+
+.check svg { width: 13px; height: 13px; stroke-width: 3; }
+
+.check:hover { border-color: var(--green); }
+
+.cell.is-checked .check { border-color: var(--green); background: var(--green); color: rgb(var(--pane-rgb)); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .check { transition: background 0.15s ease, border-color 0.15s ease; }
+}
+
+.plate-empty { padding: 4px 2px 2px; color: var(--muted); }
+
+.plate-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+.add-value { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 6px; margin-top: 10px; }
+
+.not-shown { margin-top: 10px; color: var(--muted); font-size: 0.87rem; }
+
+.legend { display: flex; gap: 16px; margin-top: 9px; color: var(--muted); font-size: 0.84rem; }
+
+.legend-pencil { color: var(--muted); }
+
+.legend-ink { color: var(--text); font-weight: 600; }
+
+.text-read { margin-top: 16px; }
+
+.text-read summary { cursor: pointer; color: var(--muted); font-size: 0.87rem; }
+
+.text-read pre {
+  margin: 8px 0 0;
+  padding: 10px;
+  max-height: 240px;
+  overflow: auto;
+  border-radius: var(--round-small);
+  background: var(--raised);
+  font: 0.84rem/1.5 var(--ui);
+  white-space: pre-wrap;
+}
+
+/* ---------- Ask Mouse ---------- */
+
+.ask { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+.ask-log { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.ask-intro { color: var(--muted); }
+
+.said { max-width: 92%; padding: 9px 14px; border-radius: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.said.by-person { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 5px; }
+
+.said.by-mouse { align-self: flex-start; background: var(--raised); border: 1px solid var(--line); border-bottom-left-radius: 5px; }
+
+.said.is-thinking { color: var(--muted); }
+
+.said.is-problem { color: var(--red); }
+
+.said-foot { display: flex; align-items: center; gap: 8px; margin-top: -4px; color: var(--muted); font-size: 0.8rem; }
+
+.said-foot .icon-button { width: 26px; height: 26px; border-radius: 8px; }
+
+.said-foot svg { width: 15px; height: 15px; }
+
+.ask-starters { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; }
+
+.starter {
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.starter:hover { background: var(--hover); }
+
+.ask-form { display: flex; gap: 8px; align-items: flex-end; padding: 0 16px 8px; }
+
+.ask-box { flex: 1; padding: 8px 12px; border-radius: var(--round); resize: none; }
+
+.ask-note { padding: 0 16px 14px; color: var(--muted); font-size: 0.8rem; }
+
+/* ---------- Nothing here yet ---------- */
+
+.empty { max-width: 50ch; margin: 14vh auto 0; }
+
+.empty h2 { font: 600 1.73rem/1.2 var(--ui); letter-spacing: -0.01em; }
+
+.empty p { margin: 10px 0 20px; color: var(--muted); }
+
+/* ---------- Dialogs: add a day, settings ---------- */
+
+.dialog {
+  width: min(660px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  border-radius: var(--round-pane);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 var(--edge), 0 30px 80px -10px var(--shadow);
+}
+
+.dialog-wide { width: min(820px, calc(100vw - 32px)); }
+
+.dialog::backdrop {
+  background: rgb(8 10 14 / 0.38);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.dialog-form { padding: 22px 24px 20px; }
+
+.dialog-form h2 { font: 600 1.4rem/1.2 var(--ui); }
+
+.browser { margin-top: 8px; border: 1px solid var(--line); border-radius: var(--round-small); background: var(--well); overflow: hidden; }
+
+.browser-places { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--line); }
+
+.browser-here { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+
+.browser-path { font-size: 0.84rem; color: var(--muted); overflow-wrap: anywhere; }
+
+.browser-folders { padding: 4px; max-height: 170px; overflow-y: auto; }
+
+.browser-folder {
+  display: block;
+  width: 100%;
+  padding: 4px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.browser-folder:hover { background: var(--hover); }
+
+.browser-count { padding: 7px 10px; border-top: 1px solid var(--line); font-size: 0.87rem; color: var(--muted); }
+
+.browser-count.has-files { color: var(--green); font-weight: 600; }
+
+.two-up { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; }
+
+.two-up.two-even { grid-template-columns: 1fr 1fr; }
+
+textarea.input { display: block; resize: vertical; min-height: 4.5em; }
+
+/* A button that sits apart, on the left of a dialog's row of buttons. */
+.dialog-left { margin-right: auto; text-align: left; }
+
+.form-problem { margin-top: 12px; color: var(--red); font-weight: 600; }
+
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* ---------- Settings ---------- */
+
+.settings { display: grid; grid-template-columns: 190px minmax(0, 1fr); min-height: min(560px, calc(100vh - 60px)); }
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 22px 10px 16px;
+  border-right: 1px solid var(--line);
+  background: var(--raised);
+}
+
+.settings-nav h2 { padding: 0 10px 12px; font: 600 1.27rem/1.2 var(--ui); }
+
+.settings-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--round-small);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-link:hover { background: var(--hover); }
+
+.settings-link[aria-current="true"] { background: var(--hover); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+
+.settings-body { display: flex; flex-direction: column; padding: 22px 24px 20px; min-width: 0; overflow-y: auto; max-height: calc(100vh - 50px); }
+
+.settings-section { flex: 1; }
+
+.settings-section h3 { display: flex; align-items: center; gap: 10px; font: 600 1.4rem/1.2 var(--ui); }
+
+.settings-section h4 { margin: 20px 0 8px; font: 600 0.9rem/1.3 var(--ui); }
+
+.settings-section > p { margin-top: 10px; max-width: 62ch; }
+
+.settings-reset { margin-top: 22px; }
+
+/* "Coming soon", said quietly. */
+.soon {
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font: 600 0.74rem/1.5 var(--ui);
+  white-space: nowrap;
+}
+
+.choices { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Theme: three small pictures of a window. */
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 7px 7px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: var(--raised);
+  color: var(--text);
+  font: 600 0.84rem/1.3 var(--ui);
+  cursor: pointer;
+}
+
+.theme-preview {
+  display: block;
+  width: 118px;
+  height: 66px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+}
+
+.theme-preview.is-light { background: linear-gradient(90deg, #dfe5ee 0 30%, #ffffff 30%); }
+.theme-preview.is-dark { background: linear-gradient(90deg, #14161c 0 30%, #262932 30%); }
+.theme-preview.is-auto { background: linear-gradient(115deg, #ffffff 0 50%, #262932 50%); }
+
+/* Colour: a row of round dots. */
+.swatch {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+  cursor: pointer;
+}
+
+/* Background: small pictures made with the same recipe as the real one. */
+.wall {
+  display: grid;
+  align-items: end;
+  width: 82px;
+  height: 56px;
+  padding: 0 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  font: 600 0.77rem/1.3 var(--ui);
+  cursor: pointer;
+}
+
+/* The one that is chosen gets a ring in the accent colour. */
+.theme-card[aria-checked="true"], .wall[aria-checked="true"], .swatch[aria-checked="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.slider-row { display: flex; align-items: center; gap: 12px; max-width: 420px; color: var(--muted); font-size: 0.84rem; }
+
+.slider-row input { flex: 1; accent-color: var(--accent); }
+
+/* Tools */
+
+.tools { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+
+.tool {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  background: var(--raised);
+}
+
+.tool-name { font-weight: 600; }
+
+.tool-about { grid-column: 1; color: var(--muted); font-size: 0.87rem; }
+
+.tool-extra { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; font-size: 0.87rem; }
+
+.tool-state { grid-row: 1 / span 2; grid-column: 2; color: var(--muted); font-size: 0.84rem; text-align: right; }
+
+.tool-state.is-on { color: var(--green); font-weight: 600; }
+
+/* The box for a key, and the small print under it. */
+.tool-key .input { flex: 1 1 260px; width: auto; }
+
+.tool-small-print { flex: 1 1 100%; margin: 2px 0 0; }
+
+.tool-key .form-problem { flex: 1 1 100%; margin: 0; }
+
+.tool.is-later { background: none; border-style: dashed; }
+
+/* An on/off switch. */
+.switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--line);
+  box-shadow: inset 0 0 0 1px var(--line);
+  cursor: pointer;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--knob);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+  transition: left 0.15s ease;
+}
+
+.switch[aria-checked="true"] { background: var(--accent); }
+
+.switch[aria-checked="true"]::after { left: 21px; }
+
+/* Plugs: what a marketplace shelf might hold, drawn faintly. */
+
+.plugs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+
+.plug {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--round);
+  color: var(--muted);
+  font-size: 0.87rem;
+}
+
+.plug strong { color: var(--text); font-size: 1rem; }
+
+/* About */
+
+.about { margin-top: 14px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 16px; }
+
+.about dt { color: var(--muted); }
+
+.about dd { overflow-wrap: anywhere; }
+
+/* ---------- Short messages ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 9px 18px;
+  border-radius: 999px;
+  color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.toast.is-showing { opacity: 1; }
+
+.toast.is-problem { color: var(--red); }
+
+/* A message that offers something to press ("Open", "Show in folder"). */
+.toast.has-buttons { display: flex; align-items: center; gap: 10px; padding-right: 9px; }
+.toast.has-buttons.is-showing { pointer-events: auto; }
+
+.toast-button {
+  flex: none;
+  padding: 3px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--accent);
+  font: 600 0.84rem/1.3 var(--ui);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.toast-button:hover { background: var(--hover); }
+
+/* ---------- Only in Mouse's own window ----------
+   A few things only a program of its own can do: Windows' own "choose a
+   folder" box, taking a folder that is dropped on it, shortcuts in the
+   Start menu. In a web browser they are not shown. (app.js marks the page
+   when it is in the window.) */
+
+html:not([data-window]) .only-window { display: none !important; }
+
+.folder-row { display: flex; align-items: center; gap: 8px; }
+.folder-row .input { flex: 1; min-width: 0; }
+.folder-row .button { flex: none; white-space: nowrap; }
+
+/* While a folder is dragged over the window: where to let go. */
+.drop-here {
+  position: fixed;
+  inset: 12px;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--accent);
+  border-radius: var(--round-pane);
+  background: rgb(var(--pane-rgb) / 0.78);
+  pointer-events: none;
+}
+
+.drop-here[hidden] { display: none; }
+
+.drop-here p {
+  padding: 14px 30px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  text-align: center;
+  font: 600 1.3rem/1.3 var(--ui);
+}
+
+.about-actions { margin: 10px 0 14px; }
+
+.shortcuts { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; max-width: 420px; }
+
+.shortcuts li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 8px 7px 14px;
+  border-radius: var(--round-small);
+  background: var(--raised);
+}
+
+#shortcuts-said.is-problem { color: var(--red); }
+
+.keys { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 5px 18px; margin-top: 8px; }
+.keys dt { font-weight: 600; white-space: nowrap; }
+.keys dd { color: var(--muted); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast { transition: opacity 0.2s ease; }
+}
+
+/* ---------- Smaller windows ---------- */
+
+@media (max-width: 1200px) {
+  /* The side panel floats over the page instead of sitting beside it. */
+  .shell.has-side { grid-template-columns: 52px 258px minmax(0, 1fr); }
+  .shell.no-sidebar.has-side { grid-template-columns: 52px minmax(0, 1fr); }
+
+  .side {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: min(430px, calc(100vw - 20px));
+    background: rgb(var(--pane-rgb) / calc(1 - var(--clear) * 0.22));
+    z-index: 5;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell, .shell.has-side { grid-template-columns: 46px minmax(0, 1fr); gap: 8px; padding: 8px; }
+
+  .ribbon-button { width: 34px; height: 34px; }
+
+  .sidebar {
+    position: fixed;
+    top: 8px;
+    bottom: 8px;
+    left: 62px;
+    width: min(270px, calc(100vw - 70px));
+    background: rgb(var(--pane-rgb) / calc(1 - var(--clear) * 0.22));
+    z-index: 4;
+  }
+
+  /* On a small screen the list of days starts closed. */
+  .shell:not(.show-sidebar) .sidebar { display: none; }
+
+  .side { top: 8px; right: 8px; bottom: 8px; width: calc(100vw - 16px); }
+
+  .page-inner { padding: 20px 16px 50px; }
+
+  .visit-name { font-size: 1.6rem; }
+
+  .two-up { grid-template-columns: 1fr; }
+
+  .menu-panel { right: auto; left: 0; }
+
+  .moment { grid-template-columns: 44px 72px minmax(0, 1fr); gap: 10px; }
+
+  .moment::before { left: 48px; }
+
+  .moment::after { left: 44.5px; }
+
+  .moment-picture { width: 72px; height: 56px; }
+
+  .moment-time { padding-right: 10px; }
+
+  /* What was said: on a narrow screen the speech mark takes little room,
+     and each time sits above its words instead of beside them. */
+  .moment.is-spoken { grid-template-columns: 44px 18px minmax(0, 1fr); }
+
+  .moment.is-spoken::after { left: 45.5px; }
+
+  .day .spoken-line { grid-template-columns: minmax(0, 1fr); }
+
+  .day .spoken-cue { grid-column: 1; }
+
+  /* Settings: the sections become a row of tabs across the top. */
+  .settings { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+
+  .settings-nav { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 14px 12px 10px; border-right: 0; border-bottom: 1px solid var(--line); }
+
+  .settings-nav h2 { width: 100%; padding-bottom: 6px; }
+
+  .settings-link[aria-current="true"] { box-shadow: inset 0 -3px 0 var(--accent); }
+
+  .settings-body { padding: 18px 16px 16px; }
+
+  .plugs { grid-template-columns: minmax(0, 1fr); }
+}

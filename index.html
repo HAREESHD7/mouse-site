@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mouse: your day, written down for you</title>
+  <meta name="description" content="Mouse looks through the photos from your day, reads what is in them, and writes the day out as text. It runs on your own computer.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="site.css">
+</head>
+<body class="without-download">
+
+  <header class="top">
+    <a class="wordmark" href="#top-of-page">Mouse</a>
+    <nav class="top-links" aria-label="On this page">
+      <a href="#shell">What it is</a>
+      <a href="#text">Your day as text</a>
+      <a href="#tools">Tools</a>
+      <a href="#yours">Privacy</a>
+    </nav>
+    <a class="button button-main" href="#download">Download</a>
+  </header>
+
+  <main id="top-of-page">
+
+    <section class="hero">
+      <h1>Your day, written down for you.</h1>
+      <p class="lead">Mouse looks through the photos from your day, reads what is in them, and writes the day out as plain text: something you can ask questions about, keep in your notes, or paste anywhere. It runs on your own computer.</p>
+      <div class="hero-actions">
+        <a class="button button-main button-large" href="#download">Download now</a>
+        <a class="button button-large" href="demo/">Try it in your browser</a>
+      </div>
+      <p class="small">Early preview, version 0.3.12. Free with the AI on your own computer. No account.</p>
+    </section>
+
+    <!-- The real screen, running here with a made-up day. -->
+    <section class="stage" aria-label="Live demo">
+      <iframe class="stage-screen" src="demo/" title="Mouse, running with a made-up day" loading="lazy"></iframe>
+      <p class="stage-note">This is the real Mouse screen, running in your browser with a made-up day. Click around, open a photo, ask it something. <a href="demo/">Open it full size</a></p>
+    </section>
+
+    <section class="band" id="shell">
+      <h2>A shell with senses, and a brain you choose</h2>
+      <p class="lead">Mouse is an empty shell. It sees through a camera, listens through a microphone, speaks through a speaker, and thinks with whichever AI you connect to it. Here is how far each of those has got.</p>
+      <ul class="senses">
+        <li class="pane">
+          <h3>Sees</h3>
+          <p>Reads the words in your photos and says what each one shows: a sign, a receipt, a screen, a note.</p>
+          <span class="status is-ready">Works today</span>
+        </li>
+        <li class="pane">
+          <h3>Listens</h3>
+          <p>Writes down what is said in your recordings, on your own computer, and tells it between your photos at the moment it was said. It can mishear, so the words are yours to check.</p>
+          <span class="status is-ready">Early</span>
+        </li>
+        <li class="pane">
+          <h3>Speaks</h3>
+          <p>Reads a summary or an answer aloud, using a voice already on your computer.</p>
+          <span class="status is-ready">Early</span>
+        </li>
+        <li class="pane">
+          <h3>Thinks</h3>
+          <p>An AI model on your own computer answers questions and writes the summary. Claude, an AI in the cloud, is a choice you make yourself, with a key of your own.</p>
+          <span class="status is-ready">Works today</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="band split" id="text">
+      <div>
+        <h2>The whole day, as text you own</h2>
+        <p>Photos are hard to search and easy to forget. Mouse lays the day out in order, writes a short summary, and hands you the lot as one plain text note.</p>
+        <p>Copy it, or save it as a file. It opens in any notes app, and you can paste it into an email, a report, or a chat with any AI you like.</p>
+      </div>
+      <pre class="pane note" aria-label="An example of a day as text"># Saturday in the city
+
+2026-11-07
+
+A Saturday in town. Coffee at Harbour Coffee
+a little before nine, then the 09:32 train to
+Riverside from platform 3...
+
+## In order
+
+### 10:05 Sign
+
+> CITY LIBRARY
+> Monday to Friday 9 am to 8 pm
+> Saturday 10 am to 5 pm
+> Sunday closed</pre>
+    </section>
+
+    <section class="band split" id="tools">
+      <div>
+        <h2>Plug in what you need</h2>
+        <p>Mouse starts simple. Tools add skills, and you switch on only the ones you want.</p>
+        <p>The first tool is Nameplates, made for equipment surveys. It finds the rating plates in your photos, lays out make, model and serial number, keeps track of what you have checked, and exports the lot to Excel.</p>
+        <p>Plugs, a place to browse tools made by other people, is on the way.</p>
+      </div>
+      <ul class="tool-list">
+        <li class="pane"><strong>Text reader</strong><span>Built in</span></li>
+        <li class="pane"><strong>AI on your computer</strong><span>Built in</span></li>
+        <li class="pane"><strong>Nameplates</strong><span>Switch it on in Settings</span></li>
+        <li class="pane"><strong>Listening</strong><span>Fetched once, then built in</span></li>
+        <li class="pane is-later"><strong>Plugs</strong><span>Coming soon</span></li>
+      </ul>
+    </section>
+
+    <section class="band" id="yours">
+      <h2>Yours to keep</h2>
+      <p class="lead">Your photos and notes are ordinary files in a folder on your computer. There is no account, and Mouse sends nothing anywhere on its own. Only if you connect a cloud AI yourself is what it reads sent to that AI. If Mouse disappeared tomorrow, your files would still open.</p>
+    </section>
+
+    <section class="band" id="download">
+      <h2>Get Mouse</h2>
+
+      <div class="downloads has-download">
+        <div class="pane download">
+          <h3>Windows</h3>
+          <a class="button button-main button-large" href="download/Mouse-windows.zip" download>Download for Windows</a>
+          <ol>
+            <li>Unzip the folder anywhere you like.</li>
+            <li>Double-click <strong>Mouse.exe</strong>. Windows may say it does not know this program yet: choose <em>More info</em>, then <em>Run anyway</em>.</li>
+            <li>Mouse opens in a window of its own. To stop it, close the window.</li>
+          </ol>
+        </div>
+        <div class="pane download">
+          <h3>Linux</h3>
+          <a class="button button-large" href="download/mouse-linux.tar.gz" download>Download for Linux</a>
+          <ol>
+            <li>Unpack the folder.</li>
+            <li>Run <strong>./mouse</strong> from inside it.</li>
+            <li>Mouse opens in your web browser. Keep the terminal open while you use it.</li>
+          </ol>
+        </div>
+      </div>
+
+      <p class="pane no-download">The first download is being packed. Until it is here, <a href="demo/">try Mouse in your browser</a>.</p>
+
+      <p class="small">Mouse reads the words in photos by itself. For summaries and questions it uses a free program called Ollama and one AI model; the read-me inside the download walks you through it. Phone and Mac versions come later.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span class="wordmark">Mouse</span>
+    <span>Early preview, version 0.3.12. Your photos stay on your computer.</span>
+    <nav aria-label="Footer">
+      <a href="demo/">Demo</a>
+      <a href="#download">Download</a>
+      <a href="#top-of-page">Back to top</a>
+    </nav>
+    <span class="small">© 2026 Mouse</span>
+  </footer>
+
+</body>
+</html>
