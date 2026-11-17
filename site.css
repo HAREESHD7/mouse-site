@@ -1,0 +1,295 @@
+/* The Mouse web page.
+ *
+ * It wears the same clothes as the app: panes of frosted glass over a soft
+ * coloured background, one amber accent, plain system lettering with the
+ * stamped "Mouse" wordmark. It follows the visitor's light or dark setting.
+ * No outside fonts, scripts or trackers.
+ */
+
+:root {
+  --ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Noto Sans", "Liberation Sans", sans-serif;
+  --stamped: "Bahnschrift", "DIN Alternate", "Roboto Condensed", "Arial Narrow", "Liberation Sans Narrow", sans-serif;
+
+  --pane: rgb(22 24 31 / 0.6);
+  --text: #eceef2;
+  --muted: #aab0bc;
+  --line: rgb(255 255 255 / 0.11);
+  --edge: rgb(255 255 255 / 0.14);
+  --raised: rgb(255 255 255 / 0.07);
+  --hover: rgb(255 255 255 / 0.13);
+  --accent: #e5b85c;
+  --accent-strong: #f1c979;
+  --on-accent: #15161a;
+  --green: #5fd198;
+  --shadow: rgb(0 0 0 / 0.5);
+  --wall: #0b0d12;
+  --pool-1: hsl(198 62% 32%);
+  --pool-2: hsl(262 62% 33%);
+  --pool-3: hsl(168 62% 27%);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --pane: rgb(255 255 255 / 0.62);
+    --text: #1a1f27;
+    --muted: #505966;
+    --line: rgb(20 30 50 / 0.13);
+    --edge: rgb(255 255 255 / 0.9);
+    --raised: rgb(255 255 255 / 0.62);
+    --hover: rgb(20 30 50 / 0.08);
+    --accent: #855f08;
+    --accent-strong: #6b4c05;
+    --on-accent: #ffffff;
+    --green: #18794a;
+    --shadow: rgb(40 50 80 / 0.22);
+    --wall: #e8ecf3;
+    --pool-1: hsl(198 80% 84%);
+    --pool-2: hsl(262 80% 86%);
+    --pool-3: hsl(168 70% 84%);
+    color-scheme: light;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 8% 0%, var(--pool-1), transparent 72%),
+    radial-gradient(ellipse 55% 45% at 100% 8%, var(--pool-2), transparent 72%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, var(--pool-3), transparent 72%),
+    var(--wall);
+  background-attachment: fixed;
+  color: var(--text);
+  font: 17px/1.6 var(--ui);
+}
+
+h1, h2, h3, p, ul, ol { margin: 0; padding: 0; }
+
+ul { list-style: none; }
+
+a { color: var(--accent); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+main, .top, .foot { width: min(1120px, calc(100% - 32px)); margin-inline: auto; }
+
+/* ---------- Glass ---------- */
+
+.pane, .top {
+  background: var(--pane);
+  -webkit-backdrop-filter: blur(30px) saturate(170%);
+  backdrop-filter: blur(30px) saturate(170%);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 var(--edge), 0 14px 34px -14px var(--shadow);
+  border-radius: 20px;
+}
+
+/* ---------- Top bar ---------- */
+
+.top {
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 12px;
+  padding: 9px 10px 9px 22px;
+  border-radius: 999px;
+}
+
+.wordmark {
+  color: var(--text);
+  font: 600 1.5rem/1.2 var(--stamped);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.top-links { display: flex; flex-wrap: wrap; gap: 4px 20px; flex: 1; }
+
+.top-links a { color: var(--muted); font-size: 0.94rem; text-decoration: none; }
+
+.top-links a:hover { color: var(--text); }
+
+/* ---------- Buttons ---------- */
+
+.button {
+  display: inline-block;
+  padding: 7px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text);
+  font: 600 0.94rem/1.4 var(--ui);
+  text-decoration: none;
+}
+
+.button:hover { background: var(--hover); }
+
+.button-main { border-color: transparent; background: var(--accent); color: var(--on-accent); }
+
+.button-main:hover { background: var(--accent-strong); }
+
+.button-large { padding: 11px 26px; font-size: 1.06rem; }
+
+/* ---------- Opening ---------- */
+
+.hero { padding: 84px 0 44px; max-width: 800px; }
+
+h1 {
+  font: 600 clamp(2.5rem, 6.2vw, 4.4rem)/1.04 var(--ui);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.lead { margin-top: 22px; max-width: 64ch; color: var(--muted); font-size: 1.16rem; }
+
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+
+.small { margin-top: 16px; color: var(--muted); font-size: 0.88rem; }
+
+/* The live demo: the app itself in a frame. */
+
+.stage-screen {
+  display: block;
+  width: 100%;
+  height: min(720px, 78vh);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 40px 90px -30px var(--shadow);
+  background: var(--wall);
+}
+
+.stage-note { margin-top: 14px; color: var(--muted); font-size: 0.94rem; text-align: center; }
+
+/* ---------- Sections ---------- */
+
+.band { padding: 96px 0 0; }
+
+h2 {
+  font: 600 clamp(1.8rem, 3.6vw, 2.5rem)/1.12 var(--ui);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+h3 { font: 600 1.2rem/1.3 var(--ui); }
+
+.band p + p { margin-top: 14px; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+
+.split p { margin-top: 16px; color: var(--muted); max-width: 54ch; }
+
+/* The four senses */
+
+.senses { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 34px; }
+
+.senses li { display: flex; flex-direction: column; gap: 10px; padding: 22px 20px 20px; }
+
+.senses p { flex: 1; color: var(--muted); font-size: 0.96rem; }
+
+.status {
+  align-self: flex-start;
+  padding: 2px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.status.is-ready { color: var(--green); }
+
+/* The day as text */
+
+.note {
+  margin: 0;
+  padding: 26px 28px;
+  overflow-x: auto;
+  font: 0.9rem/1.6 ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  color: var(--text);
+}
+
+/* Tools */
+
+.tool-list { display: flex; flex-direction: column; gap: 10px; }
+
+.tool-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-radius: 16px;
+}
+
+.tool-list span { color: var(--muted); font-size: 0.9rem; text-align: right; }
+
+.tool-list .is-later { background: none; border-style: dashed; box-shadow: none; }
+
+/* Download */
+
+.downloads { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 30px; }
+
+.download { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; padding: 26px 26px 24px; }
+
+.download ol { padding-left: 1.3em; color: var(--muted); font-size: 0.96rem; }
+
+.download li + li { margin-top: 6px; }
+
+.download strong, .download em { color: var(--text); font-style: normal; }
+
+.no-download { display: none; margin-top: 30px; padding: 22px 26px; }
+
+/* Until there is a download to give, say so instead of offering dead links. */
+.without-download .has-download { display: none; }
+.without-download .no-download { display: block; }
+
+/* ---------- Footer ---------- */
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 26px;
+  margin-top: 110px;
+  padding: 26px 0 40px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.foot nav { display: flex; gap: 18px; margin-left: auto; }
+
+.foot a { color: var(--muted); }
+
+.foot a:hover { color: var(--text); }
+
+.foot .small { margin: 0; width: 100%; }
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 860px) {
+  .top-links { display: none; }
+  .top { justify-content: space-between; }
+  .hero { padding: 56px 0 34px; }
+  .band { padding-top: 70px; }
+  .split { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .senses { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .downloads { grid-template-columns: minmax(0, 1fr); }
+  .stage-screen { height: 620px; border-radius: 18px; }
+  .foot nav { margin-left: 0; }
+}
+
+@media (max-width: 480px) {
+  body { font-size: 16px; }
+  .senses { grid-template-columns: minmax(0, 1fr); }
+}

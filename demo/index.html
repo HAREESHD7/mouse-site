@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-accent="amber" data-wall="aurora" data-text="normal">
+<head>
+  <meta charset="utf-8">
+  <!-- "viewport-fit=cover": on a tablet or phone the page reaches the
+       edges of the screen. style.css keeps what matters clear of the clock
+       at the top, the bar at the bottom and the rounded corners. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mouse</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- What each edition of Mouse changes: its name, its words, its switches. -->
+  <script src="editions.js"></script>
+  <script>
+    // Work out which edition this is, and put its look (or the look you
+    // chose) in place before anything is drawn, so the screen does not flash
+    // from one look to another. app.js does the same job in full.
+    (function () {
+      // Inside the app on a tablet or phone the page is opened once with a
+      // key in its address. The Mouse program has kept it by now, so it is
+      // taken out of the address again.
+      if (/[?&]key=/.test(location.search)) {
+        var rest = new URLSearchParams(location.search);
+        rest.delete("key");
+        var kept = rest.toString();
+        try { history.replaceState(null, "", location.pathname + (kept ? "?" + kept : "")); } catch (e) { /* stays */ }
+      }
+      var root = document.documentElement;
+      var editions = window.MouseEditions || {};
+      // The Mouse program marks this page with its edition. The demo on the
+      // web has no program behind it, so there the address can say which:
+      // "?edition=audit".
+      var id = root.dataset.edition || new URLSearchParams(location.search).get("edition") || "everyday";
+      if (!editions[id]) id = "everyday";
+      root.dataset.edition = id;
+      var look = (editions[id] || {}).look || {};
+      // Each edition remembers its own choices.
+      var end = id === "everyday" ? "" : "-" + id;
+      var saved = function (name) { try { return localStorage.getItem(name + end); } catch (e) { return null; } };
+      var theme = saved("mouse-theme");
+      if (theme !== "light" && theme !== "dark") {
+        theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      root.dataset.theme = theme;
+      root.dataset.accent = saved("mouse-accent") || look.accent || "amber";
+      root.dataset.wall = saved("mouse-wall") || look.wall || "aurora";
+      if (saved("mouse-text")) root.dataset.text = saved("mouse-text");
+      if (saved("mouse-clear") !== null) root.style.setProperty("--clear", String(Number(saved("mouse-clear")) / 100));
+    })();
+  </script>
+</head>
+<body>
+  <!-- Only shown on the public demo page, where the day is made up. -->
+  <p class="demo-bar" id="demo-bar" hidden>
+    <span id="demo-words">You are trying Mouse with a made-up day. Nothing you do here is saved.</span>
+    <a href="../#download" target="_top">Get Mouse</a>
+  </p>
+
+  <div class="shell" id="shell">
+
+    <!-- Far left: a narrow strip of main actions -->
+    <nav class="ribbon" aria-label="Main actions">
+      <button class="ribbon-button" id="toggle-sidebar" type="button" title="Show or hide your days" aria-label="Show or hide your days">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
+      </button>
+      <button class="ribbon-button" id="add-visit" type="button" title="Add a day" aria-label="Add a day">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="ribbon-button" id="open-ask" type="button" title="Ask Mouse about this day" aria-label="Ask Mouse about this day">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+      </button>
+      <button class="ribbon-button" id="open-tools" type="button" title="Tools plugged into Mouse" aria-label="Tools plugged into Mouse">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0V8zM12 17v4"/></svg>
+      </button>
+      <span class="ribbon-gap"></span>
+      <button class="ribbon-button" id="toggle-theme" type="button" title="Switch between dark and light" aria-label="Switch between dark and light">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button class="ribbon-button" id="open-settings" type="button" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+      </button>
+    </nav>
+
+    <!-- Left: your days -->
+    <aside class="sidebar" id="sidebar" aria-label="Your days">
+      <h1 class="wordmark" id="wordmark">Mouse</h1>
+      <input class="search" id="find-visit" type="search" placeholder="Find a day" aria-label="Find a day">
+      <!-- In an edition where each visit has a status: show them by status -->
+      <div class="status-chips" id="status-chips" role="group" aria-label="Show by status" hidden></div>
+      <nav class="visit-list" id="visit-list" aria-label="Saved days"></nav>
+      <!-- The way to what was taken out of the list. Shown only while
+           something is there. -->
+      <button class="removed-link" id="open-removed" type="button" hidden>Removed days</button>
+      <p class="kept-here" data-here>Everything is kept on this computer.</p>
+    </aside>
+
+    <!-- Middle: the open day -->
+    <main class="page" id="page">
+      <div class="page-inner">
+
+        <header class="visit-head" id="visit-head" hidden>
+          <h2 class="visit-name" id="visit-name"></h2>
+          <!-- In an edition that shows a visit in parts: what kind of visit
+               this is, in place of the row of facts -->
+          <p class="visit-context" id="visit-context" hidden></p>
+          <dl class="facts" id="visit-facts"></dl>
+          <div class="toolbar">
+            <div class="views" role="tablist" aria-label="How to look at this day">
+              <button class="view" id="view-day-tab" type="button" role="tab" aria-selected="true">Day</button>
+              <!-- Shown when the Spaces tool is on -->
+              <button class="view" id="view-spaces-tab" type="button" role="tab" aria-selected="false" hidden>Spaces</button>
+              <button class="view" id="view-photos-tab" type="button" role="tab" aria-selected="false">Photos</button>
+            </div>
+            <div class="toolbar-actions">
+              <button class="button" id="copy-note" type="button" title="Copy this whole day as text, to paste anywhere">Copy as text</button>
+              <button class="button" id="save-note" type="button" title="Save this whole day as a text note">Save as a note</button>
+              <!-- Shown when the Nameplates tool is on -->
+              <button class="button button-main" id="export" type="button" hidden>Export to Excel</button>
+              <!-- Shown when the Spaces tool is on: the files a sorted visit gives -->
+              <details class="menu" id="reports" hidden>
+                <summary class="button button-main">Reports</summary>
+                <div class="menu-panel">
+                  <button class="menu-choice" id="report-word" type="button">
+                    <strong>Word report</strong>
+                    <span>The visit told space by space, with its photos, and schedules at the end</span>
+                  </button>
+                  <button class="menu-choice" id="report-excel" type="button">
+                    <strong>Excel workbook</strong>
+                    <span>A sheet each for spaces, equipment, lighting and windows, with totals</span>
+                  </button>
+                  <button class="menu-choice" id="report-photos" type="button">
+                    <strong>Photos by space</strong>
+                    <span>A zip file with a folder for each space</span>
+                  </button>
+                </div>
+              </details>
+              <!-- In an edition where each visit has a status -->
+              <button class="button" id="mark-complete" type="button" hidden>Mark as complete</button>
+              <details class="menu" id="more">
+                <summary class="button">More</summary>
+                <div class="menu-panel">
+                  <button class="button" id="add-files" type="button">Add photos or recordings</button>
+                  <label class="menu-title" for="reader-choice">Read the photos again with</label>
+                  <select id="reader-choice" class="select select-wide"></select>
+                  <button class="button" id="read-again" type="button">Read again</button>
+                  <p class="hint">Anything you have checked yourself is kept.</p>
+                  <button class="button" id="export-menu" type="button">Export to Excel</button>
+                  <button class="button" id="rename-visit" type="button">Change the name or date</button>
+                  <button class="button only-computer" id="reveal-visit" type="button">Show its folder</button>
+                  <button class="button button-quiet" id="remove-visit" type="button">Remove this day</button>
+                </div>
+              </details>
+            </div>
+          </div>
+          <!-- In an edition that shows a visit in parts: its tabs -->
+          <div class="parts" id="parts" role="tablist" aria-label="The parts of this visit" hidden></div>
+        </header>
+
+        <!-- Shown while a day is being saved or read -->
+        <section class="job" id="job" hidden aria-live="polite">
+          <p class="job-what" id="job-what"></p>
+          <div class="job-track"><div class="job-bar" id="job-bar"></div></div>
+          <p class="job-now" id="job-now"></p>
+        </section>
+
+        <!-- Shown while a voice note is being recorded on this device -->
+        <section class="recording" id="recording" hidden aria-live="polite">
+          <span class="recording-dot" aria-hidden="true"></span>
+          <span class="recording-words" id="recording-words">Recording</span>
+          <span class="recording-time" id="recording-time">0:00</span>
+          <span class="recording-meter" aria-hidden="true"><span class="recording-level" id="recording-level"></span></span>
+          <span class="recording-buttons">
+            <button class="button button-small" id="recording-discard" type="button">Discard</button>
+            <button class="button button-main button-small" id="recording-stop" type="button">Stop and save</button>
+          </span>
+        </section>
+
+        <p class="notice" id="notice" hidden></p>
+
+        <!-- View 1: every photo as a tile -->
+        <section id="view-photos" hidden>
+          <!-- Add to this visit from the device the screen is on -->
+          <div class="add-bar" id="add-bar"></div>
+          <div class="filters" id="filters"></div>
+          <div class="grid" id="grid"></div>
+          <!-- Shown while photos are being picked, to move them together -->
+          <div class="pick-bar" id="pick-bar" hidden></div>
+        </section>
+
+        <!-- View 3 (the Spaces tool): the rooms and areas the photos are sorted into -->
+        <section id="view-spaces" hidden>
+          <div class="spaces-top">
+            <button class="button" id="add-space" type="button">Add a space</button>
+            <span class="quiet">A space is a room or an area you walked through. Sort the photos into them.</span>
+          </div>
+          <div class="spaces" id="spaces"></div>
+        </section>
+
+        <!-- View 2: the day told in order, like a page in a diary -->
+        <section id="view-day" hidden>
+          <!-- Shown in an edition that describes the visit itself (the audit one) -->
+          <details class="about-visit" id="about-visit" hidden>
+            <summary class="about-title" id="about-title">About this visit</summary>
+            <div class="about-fields" id="about-fields"></div>
+          </details>
+          <div class="summary" id="summary"></div>
+          <ol class="day" id="day"></ol>
+        </section>
+
+        <!-- The parts only an edition with parts has (the audit one): what
+             is left to do, the details of the visit, everything noted in
+             the building, and the reports -->
+        <section id="view-overview" hidden></section>
+        <section id="view-details" hidden></section>
+        <section id="view-inventory" hidden></section>
+        <section id="view-reports" hidden></section>
+
+        <!-- Shown when nothing has been saved yet -->
+        <section class="empty" id="empty" hidden>
+          <!-- These words, like every "day" on this page, are replaced by the
+               edition's own when the page starts (see applyEdition in app.js). -->
+          <h2 id="empty-title">Start with one day</h2>
+          <p id="empty-text">Choose a folder of photos from today, a trip, or anything you want to remember. Mouse keeps them on this computer, reads what is in each one, and writes the day out as text you can use anywhere.</p>
+          <button class="button button-main" id="add-first" type="button">Add a day</button>
+        </section>
+      </div>
+    </main>
+
+    <!-- Right: one photo close up, or a conversation with Mouse -->
+    <aside class="side" id="side" aria-label="Details" hidden>
+      <div class="side-tabs">
+        <div class="views" role="tablist" aria-label="Details">
+          <button class="view" id="side-photo-tab" type="button" role="tab" aria-selected="true">Photo</button>
+          <button class="view" id="side-ask-tab" type="button" role="tab" aria-selected="false">Ask Mouse</button>
+        </div>
+        <button class="icon-button" id="side-close" type="button" title="Close" aria-label="Close this panel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="side-photo" id="side-photo"></div>
+
+      <div class="ask" id="side-ask" hidden>
+        <div class="ask-log" id="ask-log" aria-live="polite"></div>
+        <div class="ask-starters" id="ask-starters"></div>
+        <form class="ask-form" id="ask-form">
+          <textarea class="ask-box" id="ask-box" rows="2" placeholder="Ask about this day" aria-label="Your question"></textarea>
+          <button class="button button-main" id="ask-send" type="submit">Ask</button>
+        </form>
+        <p class="ask-note" id="ask-note"></p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Add a day -->
+  <!-- A new name or day for the open visit -->
+  <dialog class="dialog" id="rename-dialog" aria-labelledby="rename-title">
+    <form method="dialog" id="rename-form" class="dialog-form">
+      <h2 id="rename-title">Change the name or date</h2>
+
+      <label class="field" for="rename-name">Name</label>
+      <input class="input" id="rename-name" type="text" autocomplete="off" required>
+
+      <label class="field" for="rename-date">Date</label>
+      <input class="input" id="rename-date" type="date" required>
+      <p class="hint" data-here>The folder on this computer keeps the name it was given first, so nothing that points at it breaks.</p>
+
+      <p class="form-problem" id="rename-problem" hidden></p>
+
+      <div class="dialog-actions">
+        <button class="button" id="rename-cancel" type="button">Cancel</button>
+        <button class="button button-main" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- What was taken out of the list. Nothing is ever deleted, so each one
+       can be put back. -->
+  <dialog class="dialog" id="removed-dialog" aria-labelledby="removed-title">
+    <div class="dialog-form">
+      <h2 id="removed-title">Removed days</h2>
+      <p class="hint" id="removed-words">Nothing here was deleted. Put a day back and it is in your list again, with everything in it.</p>
+      <ul class="removed-list" id="removed-list"></ul>
+      <p class="form-problem" id="removed-problem" hidden></p>
+      <div class="dialog-actions">
+        <button class="button button-main" id="removed-close" type="button">Done</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog" id="add-dialog" aria-labelledby="add-title">
+    <form method="dialog" id="add-form" class="dialog-form">
+      <h2 id="add-title">Add a day</h2>
+
+      <!-- Two ways to begin: with a folder that is on this computer, or
+           empty, with the photos added after (taken or chosen on whatever
+           device the screen is on) -->
+      <div class="ways" id="add-ways" role="radiogroup" aria-label="How to begin">
+        <label class="way"><input type="radio" name="add-way" id="add-way-folder" value="folder" checked><span>From a folder on this computer</span></label>
+        <label class="way"><input type="radio" name="add-way" id="add-way-empty" value="empty"><span>Start empty, add photos after</span></label>
+      </div>
+
+      <div id="add-folder-part">
+        <label class="field" for="add-folder">Folder with the photos</label>
+        <div class="folder-row">
+          <input class="input" id="add-folder" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="Choose a folder below, or paste its location here">
+          <!-- Windows' own "choose a folder" box. Only Mouse's own window has it. -->
+          <button class="button only-window" id="add-pick" type="button">Choose folder…</button>
+        </div>
+        <p class="hint only-window">You can also drag a folder out of Windows and drop it on this window.</p>
+
+        <div class="browser" id="browser">
+          <div class="browser-places" id="browser-places"></div>
+          <div class="browser-here">
+            <button class="button button-small" id="browser-up" type="button">Up</button>
+            <span class="browser-path" id="browser-path"></span>
+          </div>
+          <ul class="browser-folders" id="browser-folders"></ul>
+          <p class="browser-count" id="browser-count"></p>
+        </div>
+      </div>
+      <p class="hint" id="add-empty-words" hidden></p>
+
+      <div class="two-up">
+        <div>
+          <label class="field" for="add-name">Name</label>
+          <input class="input" id="add-name" type="text" autocomplete="off" placeholder="Saturday in the city">
+        </div>
+        <div>
+          <label class="field" for="add-date">Date</label>
+          <input class="input" id="add-date" type="date">
+        </div>
+      </div>
+
+      <div id="add-reader-part">
+        <label class="field" for="add-reader">Read the photos with</label>
+        <select class="select select-wide" id="add-reader"></select>
+        <p class="hint" id="add-reader-hint"></p>
+      </div>
+
+      <p class="form-problem" id="add-problem" hidden></p>
+
+      <div class="dialog-actions">
+        <button class="button" id="add-cancel" type="button">Cancel</button>
+        <button class="button button-main" id="add-save" type="submit">Add this day</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Add a space, or change one -->
+  <dialog class="dialog" id="space-dialog" aria-labelledby="space-title">
+    <form method="dialog" id="space-form" class="dialog-form">
+      <h2 id="space-title">Add a space</h2>
+      <p class="hint" id="space-from" hidden></p>
+
+      <label class="field" for="space-name">Name</label>
+      <input class="input" id="space-name" type="text" autocomplete="off" placeholder="Boiler room" required>
+
+      <div class="two-up two-even">
+        <div>
+          <label class="field" for="space-floor">Floor</label>
+          <input class="input" id="space-floor" type="text" autocomplete="off" placeholder="Basement">
+        </div>
+        <div>
+          <label class="field" for="space-use">Used as</label>
+          <input class="input" id="space-use" type="text" autocomplete="off" list="space-uses" placeholder="Mechanical Room">
+          <datalist id="space-uses"></datalist>
+        </div>
+      </div>
+
+      <div class="two-up two-even">
+        <div>
+          <label class="field" for="space-area">Area, in square feet</label>
+          <input class="input" id="space-area" type="text" autocomplete="off" inputmode="decimal">
+        </div>
+        <div>
+          <label class="field" for="space-height">Height, in feet</label>
+          <input class="input" id="space-height" type="text" autocomplete="off" inputmode="decimal">
+        </div>
+      </div>
+
+      <label class="field" for="space-notes">Notes</label>
+      <textarea class="input" id="space-notes" rows="3"></textarea>
+
+      <p class="form-problem" id="space-problem" hidden></p>
+
+      <div class="dialog-actions">
+        <button class="button button-quiet dialog-left" id="space-remove" type="button" hidden>Remove this space</button>
+        <button class="button" id="space-cancel" type="button">Cancel</button>
+        <button class="button button-main" id="space-save" type="submit">Add this space</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Settings: the look, the tools, plugs, and about -->
+  <dialog class="dialog dialog-wide" id="settings-dialog" aria-labelledby="settings-title">
+    <div class="settings">
+      <nav class="settings-nav" aria-label="Settings sections">
+        <h2 id="settings-title">Settings</h2>
+        <button class="settings-link" type="button" data-section="look">Look</button>
+        <button class="settings-link" type="button" data-section="tools">Tools</button>
+        <button class="settings-link" type="button" data-section="plugs">Plugs <span class="soon">Soon</span></button>
+        <button class="settings-link" type="button" data-section="about">About</button>
+      </nav>
+
+      <div class="settings-body">
+
+        <section class="settings-section" id="settings-look">
+          <h3>Look</h3>
+          <p class="hint" data-here>Make Mouse yours. Changes show straight away and are remembered on this computer.</p>
+
+          <h4 id="look-theme-title">Theme</h4>
+          <div class="choices" role="radiogroup" aria-labelledby="look-theme-title" data-setting="theme">
+            <button class="theme-card" type="button" role="radio" data-value="light"><span class="theme-preview is-light"></span>Light</button>
+            <button class="theme-card" type="button" role="radio" data-value="dark"><span class="theme-preview is-dark"></span>Dark</button>
+            <button class="theme-card" type="button" role="radio" data-value="auto" data-here><span class="theme-preview is-auto"></span>Match my computer</button>
+          </div>
+
+          <h4 id="look-accent-title">Colour</h4>
+          <div class="choices" role="radiogroup" aria-labelledby="look-accent-title" data-setting="accent">
+            <button class="swatch" type="button" role="radio" data-value="amber" style="--swatch: #e5b85c" title="Amber" aria-label="Amber"></button>
+            <button class="swatch" type="button" role="radio" data-value="blue" style="--swatch: #5b9dff" title="Blue" aria-label="Blue"></button>
+            <button class="swatch" type="button" role="radio" data-value="teal" style="--swatch: #3cc4b7" title="Teal" aria-label="Teal"></button>
+            <button class="swatch" type="button" role="radio" data-value="green" style="--swatch: #55c487" title="Green" aria-label="Green"></button>
+            <button class="swatch" type="button" role="radio" data-value="rose" style="--swatch: #f57f99" title="Rose" aria-label="Rose"></button>
+            <button class="swatch" type="button" role="radio" data-value="violet" style="--swatch: #a58cf5" title="Violet" aria-label="Violet"></button>
+            <button class="swatch" type="button" role="radio" data-value="graphite" style="--swatch: #9aa1ad" title="Graphite" aria-label="Graphite"></button>
+          </div>
+
+          <h4 id="look-wall-title">Background</h4>
+          <div class="choices" role="radiogroup" aria-labelledby="look-wall-title" data-setting="wall">
+            <button class="wall" type="button" role="radio" data-value="aurora"><span>Aurora</span></button>
+            <button class="wall" type="button" role="radio" data-value="dusk"><span>Dusk</span></button>
+            <button class="wall" type="button" role="radio" data-value="meadow"><span>Meadow</span></button>
+            <button class="wall" type="button" role="radio" data-value="ember"><span>Ember</span></button>
+            <button class="wall" type="button" role="radio" data-value="mist"><span>Mist</span></button>
+            <button class="wall" type="button" role="radio" data-value="plain"><span>Plain</span></button>
+          </div>
+
+          <h4><label for="look-clear">Glass</label></h4>
+          <div class="slider-row">
+            <span>Solid</span>
+            <input type="range" id="look-clear" min="0" max="100" step="5">
+            <span>Clear</span>
+          </div>
+
+          <h4 id="look-text-title">Text size</h4>
+          <div class="views" role="radiogroup" aria-labelledby="look-text-title" data-setting="text">
+            <button class="view" type="button" role="radio" data-value="small">Small</button>
+            <button class="view" type="button" role="radio" data-value="normal">Normal</button>
+            <button class="view" type="button" role="radio" data-value="large">Large</button>
+          </div>
+
+          <p class="settings-reset"><button class="button button-quiet" id="look-reset" type="button">Put the look back the way it came</button></p>
+        </section>
+
+        <section class="settings-section" id="settings-tools" hidden>
+          <h3>Tools</h3>
+          <p class="hint">Mouse is the shell: it sees, remembers and answers. Tools are what you switch on to make sense of what it saw. Use the ones you want.</p>
+          <ul class="tools" id="tools-list"></ul>
+        </section>
+
+        <section class="settings-section" id="settings-plugs" hidden>
+          <h3>Plugs <span class="soon">Coming soon</span></h3>
+          <p>Plugs are tools made by other people. You will be able to browse them here and add one with a click, the way you add an app to a phone.</p>
+          <p class="hint">A few things a plug could do:</p>
+          <ul class="plugs">
+            <li class="plug"><strong>Receipts</strong><span>Adds up what you spent from photos of receipts.</span></li>
+            <li class="plug"><strong>Meeting notes</strong><span>Turns a recorded conversation into notes and to-dos.</span></li>
+            <li class="plug"><strong>Recipes</strong><span>Saves a photographed recipe as ingredients and steps.</span></li>
+            <li class="plug"><strong>Business cards</strong><span>Pulls the name, phone and email out of a card.</span></li>
+          </ul>
+          <p class="hint">None of these exist yet. They are here to show the idea.</p>
+        </section>
+
+        <section class="settings-section" id="settings-about" hidden>
+          <h3>About</h3>
+          <dl class="about" id="about-list"></dl>
+          <p class="about-actions only-computer"><button class="button button-small" id="open-vault" type="button">Open this folder</button></p>
+          <p data-here>Your photos and notes stay on this computer. Mouse does not upload them anywhere. The AI that reads and answers also runs on this computer.</p>
+
+          <!-- The rest only Mouse's own window can do. -->
+          <div class="only-window" id="shortcuts">
+            <h4>Open it like any program</h4>
+            <p class="hint" id="shortcuts-words">A shortcut opens Mouse straight away, with its own icon.</p>
+            <ul class="shortcuts">
+              <li><span>In the Start menu</span><button class="button button-small" type="button" id="shortcut-start-menu" data-spot="start-menu" disabled>Add</button></li>
+              <li><span>On the Desktop</span><button class="button button-small" type="button" id="shortcut-desktop" data-spot="desktop" disabled>Add</button></li>
+            </ul>
+            <p class="hint" id="shortcuts-said" aria-live="polite"></p>
+          </div>
+
+          <div class="only-window">
+            <h4>Keys</h4>
+            <dl class="keys" id="keys-list"></dl>
+          </div>
+        </section>
+
+        <div class="dialog-actions">
+          <button class="button button-main" id="settings-close" type="button">Done</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- A photo, large: it fills Mouse and can be looked at closely. -->
+  <dialog class="viewer" id="viewer" aria-label="The photo, large">
+    <div class="viewer-stage" id="viewer-stage">
+      <img class="viewer-photo" id="viewer-photo" alt="" draggable="false">
+    </div>
+    <!-- Under the photo, never over it: what it is, and what can be done. -->
+    <div class="viewer-foot">
+    <p class="viewer-name" id="viewer-name"></p>
+    <div class="viewer-bar" role="toolbar" aria-label="Looking at the photo">
+      <button class="viewer-button" id="viewer-before" type="button" title="The photo before (left arrow)" aria-label="The photo before">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+      </button>
+      <span class="viewer-count" id="viewer-count"></span>
+      <button class="viewer-button" id="viewer-after" type="button" title="The photo after (right arrow)" aria-label="The photo after">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg>
+      </button>
+      <span class="viewer-gap"></span>
+      <button class="viewer-button" id="viewer-smaller" type="button" title="Smaller (minus)" aria-label="Smaller">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg>
+      </button>
+      <button class="viewer-words" id="viewer-whole" type="button" title="Show the whole photo (0)">Whole photo</button>
+      <button class="viewer-button" id="viewer-larger" type="button" title="Larger (plus)" aria-label="Larger">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+      </button>
+      <!-- Only for someone using the Nameplates tool: show what Mouse read
+           in the photo beside it, or not. -->
+      <span class="viewer-gap" id="viewer-values-gap" hidden></span>
+      <button class="viewer-words" id="viewer-values-toggle" type="button" aria-pressed="false" title="Show or hide what Mouse read in this photo (V)" hidden>Values</button>
+    </div>
+    <button class="viewer-button viewer-close" id="viewer-close" type="button" title="Close (Esc)" aria-label="Close">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+    </button>
+    </div>
+    <!-- Beside the photo: what Mouse read in it, to be checked against the
+         photo itself. (It comes after the buttons, so that the keyboard
+         starts on them and not in a box to type in.) -->
+    <aside class="viewer-values" id="viewer-values" aria-label="What Mouse read in this photo" hidden></aside>
+  </dialog>
+
+  <!-- Shown while a folder is being dragged over Mouse's own window. -->
+  <div class="drop-here" id="drop-here" hidden><p id="drop-words">Let go to add this folder</p></div>
+
+  <!-- The device's own "choose files" box and, on a phone or a tablet, its
+       camera. Neither is ever seen: the buttons that say "Add photos" and
+       "Take photo" open them. (Apple's own photo format is left out of the
+       list on purpose: asked only for "images", an iPad or iPhone hands
+       over an ordinary JPEG, which every reader here can open.) -->
+  <input class="unseen" id="choose-files" type="file" multiple tabindex="-1" aria-hidden="true"
+         accept="image/*,audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.opus,.flac,.mp4,.mov,.m4v,.mkv,.webm,.avi,.srt,.vtt">
+  <input class="unseen" id="take-photo" type="file" tabindex="-1" aria-hidden="true" accept="image/*" capture="environment">
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="demo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
